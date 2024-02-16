@@ -29,14 +29,14 @@ while ret:
     for result in results:
         detections = []
         for r in result.boxes.data.tolist():
-            x1, y1, x2, y2, score, class_id = r
-            x1 = int(x1)
-            x2 = int(x2)
-            y1 = int(y1)
-            y2 = int(y2)
+            x_top_L, y_top_L, x_bot_R, y_bot_R, conf_value, class_id = r
+            x_top_L = int(x_top_L)
+            x_bot_R = int(x_bot_R)
+            y_top_L = int(y_top_L)
+            y_bot_R = int(y_bot_R)
             class_id = int(class_id)
-            if score > detection_threshold:
-                detections.append([x1, y1, x2, y2, score])
+            if conf_value > detection_threshold:
+                detections.append([x_top_L, y_top_L, x_bot_R, y_bot_R, conf_value])
         tracker.update(frame, detections)
         frame_height, frame_width, nChannnel = frame.shape
         cv2.rectangle(frame, (int(frame_width - 400), int(0)), (int(frame_width), int(28)), (0, 0, 0), thickness=-1)
@@ -45,20 +45,20 @@ while ret:
         for track in tracker.tracks:
             aux+=1
             bbox = track.bbox
-            x1, y1, x2, y2 = bbox
+            x_top_L, y_top_L, x_bot_R, y_bot_R = bbox
             track_id = track.track_id
             print(track)
             print(tracker.tracks)
-            object_center_X = (int(x1)+int(x2))/2
-            object_center_Y = (int(y1)+int(y2))/2
+            object_center_X = (int(x_top_L)+int(x_bot_R))/2
+            object_center_Y = (int(y_top_L) + int(y_bot_R)) / 2
             print('car detected: Id: '+str(track_id)+' Detected in cordinates: ('+str(object_center_X)+','+str(object_center_Y)+')')
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (colors[track_id % len(colors)]), 3)
+            cv2.rectangle(frame, (int(x_top_L), int(y_top_L)), (int(x_bot_R), int(y_bot_R)), (colors[track_id % len(colors)]), 3)
             cv2.circle(frame,( int(object_center_X),int(object_center_Y)),2,(colors[track_id % len(colors)]),thickness = -1)
-            cv2.rectangle(frame,  (int(x1), int(y1-15)), (int(x1+120), int(y1)), (colors[track_id % len(colors)]), thickness=-1)
+            cv2.rectangle(frame,  (int(x_top_L), int(y_top_L-15)), (int(x_top_L+120), int(y_top_L)), (colors[track_id % len(colors)]), thickness=-1)
             if (aux > 0 )&(aux == len(tracker.tracks)):
                 cv2.putText(frame, "Last detection: Id:" + str(track_id) + " posX: " + str(object_center_X) + " posY: "+str(object_center_Y), (int(frame_width - 395), int(22)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), thickness=2)
-            rounded_score = round(score,3)
+            rounded_score = round(conf_value, 3)
             #creo lista
             if track_id not in data_deque:
                 data_deque[track_id] = deque(maxlen=15)
@@ -74,7 +74,7 @@ while ret:
                 punto2_x = data_deque[track_id][i][0]
                 punto2_y = data_deque[track_id][i][1]
                 cv2.line(frame,( int(punto1_x),int(punto1_y)), ( int(punto2_x),int(punto2_y)), (colors[track_id % len(colors)]), 2)
-            cv2.putText(frame, "id:" + str(track_id) + " conf:" + str(rounded_score), (int(x1), int(y1)),
+            cv2.putText(frame, "id:" + str(track_id) + " conf:" + str(rounded_score), (int(x_top_L), int(y_top_L)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), thickness=2)
     aux = 0
 
